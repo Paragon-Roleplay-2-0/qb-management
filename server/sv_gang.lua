@@ -58,7 +58,6 @@ RegisterNetEvent('qb-gangmenu:server:stash', function()
 end)
 
 if Config.Inventory == 'ox' and oxInvState == 'started' then
-
 	local gangStash = {
 		id = 'gang_stash',
 		label = 'Gang Boss Stash',

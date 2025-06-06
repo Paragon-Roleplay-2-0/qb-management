@@ -53,7 +53,6 @@ RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
     if not PlayerJob.name or not PlayerJob.isboss then return end
 
     if Config.Inventory == 'qb' then
-
         bossMenu = {
             {
                 header = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
@@ -94,50 +93,48 @@ RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
                 }
             }
         }
-
-        elseif Config.Inventory == 'ox' then
-
-            bossMenu = {
-                {
-                    header = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
-                    icon = 'fa-solid fa-circle-info',
-                    isMenuHeader = true,
-                },
-                {
-                    header = Lang:t('body.manage'),
-                    txt = Lang:t('body.managed'),
-                    icon = 'fa-solid fa-list',
-                    params = {
-                        event = 'qb-bossmenu:client:employeelist',
-                    }
-                },
-                {
-                    header = Lang:t('body.hire'),
-                    txt = Lang:t('body.hired'),
-                    icon = 'fa-solid fa-hand-holding',
-                    params = {
-                        event = 'qb-bossmenu:client:HireMenu',
-                    }
-                },
-                {
-                    header = Lang:t('body.storage'),
-                    txt = Lang:t('body.storaged'),
-                    icon = 'fa-solid fa-box-open',
-                    params = {
-                        isServer = false,
-                        event = 'qb-bossmenu:client:stash',
-                    }
-                },
-                {
-                    header = Lang:t('body.outfits'),
-                    txt = Lang:t('body.outfitsd'),
-                    icon = 'fa-solid fa-shirt',
-                    params = {
-                        event = 'qb-bossmenu:client:Wardrobe',
-                    }
+    elseif Config.Inventory == 'ox' then
+        bossMenu = {
+            {
+                header = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
+                icon = 'fa-solid fa-circle-info',
+                isMenuHeader = true,
+            },
+            {
+                header = Lang:t('body.manage'),
+                txt = Lang:t('body.managed'),
+                icon = 'fa-solid fa-list',
+                params = {
+                    event = 'qb-bossmenu:client:employeelist',
+                }
+            },
+            {
+                header = Lang:t('body.hire'),
+                txt = Lang:t('body.hired'),
+                icon = 'fa-solid fa-hand-holding',
+                params = {
+                    event = 'qb-bossmenu:client:HireMenu',
+                }
+            },
+            {
+                header = Lang:t('body.storage'),
+                txt = Lang:t('body.storaged'),
+                icon = 'fa-solid fa-box-open',
+                params = {
+                    isServer = false,
+                    event = 'qb-bossmenu:client:stash',
+                }
+            },
+            {
+                header = Lang:t('body.outfits'),
+                txt = Lang:t('body.outfitsd'),
+                icon = 'fa-solid fa-shirt',
+                params = {
+                    event = 'qb-bossmenu:client:Wardrobe',
                 }
             }
-        end
+        }
+    end
 
     for _, v in pairs(DynamicMenuItems) do
         bossMenu[#bossMenu + 1] = v

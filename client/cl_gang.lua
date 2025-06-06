@@ -59,7 +59,6 @@ RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
     shownGangMenu = true
 
     if Config.Inventory == 'qb' then
-
         gangMenu = {
             {
                 header = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
@@ -100,9 +99,7 @@ RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
                 }
             }
         }
-
     elseif Config.Inventory == 'ox' then
-
         gangMenu = {
             {
                 header = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
@@ -272,7 +269,6 @@ RegisterNetEvent('qb-gangmenu:client:HireMembers', function()
 end)
 
 -- MAIN THREAD
-
 CreateThread(function()
     if Config.UseTarget then
         for gang, zones in pairs(Config.GangMenus) do
