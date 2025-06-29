@@ -1,3 +1,5 @@
+if not lib.checkDependency('ox_lib', '3.30.0', true) then return end
+
 local QBCore = exports['qb-core']:GetCoreObject()
 local PlayerJob = QBCore.Functions.GetPlayerData().job
 local shownBossMenu = false
@@ -24,6 +26,14 @@ end
 
 exports('RemoveBossMenuItem', RemoveBossMenuItem)
 
+local function openBossStash()
+    if Config.Inventory == 'ox' then
+        local ox_inventory = exports.ox_inventory
+        ox_inventory:openInventory('stash', 'boss_stash')
+    end
+end
+
+-- Events
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         PlayerJob = QBCore.Functions.GetPlayerData().job
@@ -38,140 +48,175 @@ RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     PlayerJob = JobInfo
 end)
 
+RegisterNetEvent('qb-bossmenu:client:stash', function()
+    openBossStash()
+end)
+
 RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
     if not PlayerJob.name or not PlayerJob.isboss then return end
 
-    local bossMenu = {
-        {
-            header = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
-            icon = 'fa-solid fa-circle-info',
-            isMenuHeader = true,
-        },
-        {
-            header = Lang:t('body.manage'),
-            txt = Lang:t('body.managed'),
-            icon = 'fa-solid fa-list',
-            params = {
-                event = 'qb-bossmenu:client:employeelist',
-            }
-        },
-        {
-            header = Lang:t('body.hire'),
-            txt = Lang:t('body.hired'),
-            icon = 'fa-solid fa-hand-holding',
-            params = {
-                event = 'qb-bossmenu:client:HireMenu',
-            }
-        },
-        {
-            header = Lang:t('body.storage'),
-            txt = Lang:t('body.storaged'),
-            icon = 'fa-solid fa-box-open',
-            params = {
-                isServer = true,
-                event = 'qb-bossmenu:server:stash',
-            }
-        },
-        {
-            header = Lang:t('body.outfits'),
-            txt = Lang:t('body.outfitsd'),
-            icon = 'fa-solid fa-shirt',
-            params = {
-                event = 'qb-bossmenu:client:Wardrobe',
+    if Config.Inventory == 'qb' then
+        local menuOptions = {
+            {
+                title = Lang:t('body.manage'),
+                icon = 'fa-solid fa-list',
+                iconColor = 'white',
+                description = Lang:t('body.managed'),
+                arrow = true,
+                event = 'qb-bossmenu:client:employeelist'
+            },
+            {
+                title = Lang:t('body.hire'),
+                icon = 'fa-solid fa-hand-holding',
+                iconColor = 'white',
+                description = Lang:t('body.hired'),
+                arrow = true,
+                event = 'qb-bossmenu:client:HireMenu'
+            },
+            {
+                title = Lang:t('body.storage'),
+                icon = 'fa-solid fa-box-open',
+                iconColor = 'white',
+                description = Lang:t('body.storaged'),
+                arrow = true,
+                serverEvent = 'qb-bossmenu:server:stash'
+            },
+            {
+                title = Lang:t('body.outfits'),
+                icon = 'fa-solid fa-shirt',
+                iconColor = 'white',
+                description = Lang:t('body.outfitsd'),
+                arrow = true,
+                event = 'qb-bossmenu:client:Wardrobe'
             }
         }
-    }
 
-    for _, v in pairs(DynamicMenuItems) do
-        bossMenu[#bossMenu + 1] = v
+        for _, v in pairs(DynamicMenuItems) do
+            menuOptions[#menuOptions + 1] = v
+        end
+
+        lib.registerContext({
+            id = 'boss_menu',
+            title = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
+            canClose = true,
+            options = menuOptions
+        })
+
+        lib.showContext('boss_menu')
+    elseif Config.Inventory == 'ox' then
+        local menuOptions = {
+            {
+                title = Lang:t('body.manage'),
+                icon = 'fa-solid fa-list',
+                iconColor = 'white',
+                description = Lang:t('body.managed'),
+                arrow = true,
+                event = 'qb-bossmenu:client:employeelist'
+            },
+            {
+                title = Lang:t('body.hire'),
+                icon = 'fa-solid fa-hand-holding',
+                iconColor = 'white',
+                description = Lang:t('body.hired'),
+                arrow = true,
+                event = 'qb-bossmenu:client:HireMenu'
+            },
+            {
+                title = Lang:t('body.storage'),
+                icon = 'fa-solid fa-box-open',
+                iconColor = 'white',
+                description = Lang:t('body.storaged'),
+                arrow = true,
+                event = 'qb-bossmenu:client:stash'
+            },
+            {
+                title = Lang:t('body.outfits'),
+                icon = 'fa-solid fa-shirt',
+                iconColor = 'white',
+                description = Lang:t('body.outfitsd'),
+                arrow = true,
+                event = 'qb-bossmenu:client:Wardrobe'
+            }
+        }
+
+        for _, v in pairs(DynamicMenuItems) do
+            menuOptions[#menuOptions + 1] = v
+        end
+
+        lib.registerContext({
+            id = 'boss_menu',
+            title = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
+            canClose = true,
+            options = menuOptions
+        })
+
+        lib.showContext('boss_menu')
     end
-
-    bossMenu[#bossMenu + 1] = {
-        header = Lang:t('body.exit'),
-        icon = 'fa-solid fa-angle-left',
-        params = {
-            event = 'qb-menu:closeMenu',
-        }
-    }
-
-    exports['qb-menu']:openMenu(bossMenu)
 end)
 
 RegisterNetEvent('qb-bossmenu:client:employeelist', function()
-    local EmployeesMenu = {
-        {
-            header = Lang:t('body.mempl') .. string.upper(PlayerJob.label),
-            isMenuHeader = true,
-            icon = 'fa-solid fa-circle-info',
-        },
-    }
-    QBCore.Functions.TriggerCallback('qb-bossmenu:server:GetEmployees', function(cb)
-        for _, v in pairs(cb) do
-            EmployeesMenu[#EmployeesMenu + 1] = {
-                header = v.name,
-                txt = v.grade.name,
+    lib.callback('qb-bossmenu:server:GetEmployees', false, function(employees)
+        local menuOptions = {}
+
+        for _, v in pairs(employees) do
+            menuOptions[#menuOptions + 1] = {
+                title = v.name,
                 icon = 'fa-solid fa-circle-user',
-                params = {
-                    event = 'qb-bossmenu:client:ManageEmployee',
-                    args = {
-                        player = v,
-                        work = PlayerJob
-                    }
+                iconColor = 'white',
+                description = v.grade.name,
+                event = 'qb-bossmenu:client:ManageEmployee',
+                args = {
+                    player = v,
+                    work = PlayerJob
                 }
             }
         end
-        EmployeesMenu[#EmployeesMenu + 1] = {
-            header = Lang:t('body.return'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-bossmenu:client:OpenMenu',
-            }
-        }
-        exports['qb-menu']:openMenu(EmployeesMenu)
+
+        lib.registerContext({
+            id = 'manage_menu',
+            title = Lang:t('body.mempl') .. string.upper(PlayerJob.label),
+            menu = 'boss_menu',
+            options = menuOptions
+        })
+
+        lib.showContext('manage_menu')
     end, PlayerJob.name)
 end)
 
 RegisterNetEvent('qb-bossmenu:client:ManageEmployee', function(data)
-    local EmployeeMenu = {
-        {
-            header = Lang:t('body.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerJob.label),
-            isMenuHeader = true,
-            icon = 'fa-solid fa-circle-info'
-        },
-    }
-    for k, v in pairs(QBCore.Shared.Jobs[data.work.name].grades) do
-        EmployeeMenu[#EmployeeMenu + 1] = {
-            header = v.name,
-            txt = Lang:t('body.grade') .. k,
-            params = {
-                isServer = true,
-                event = 'qb-bossmenu:server:GradeUpdate',
-                icon = 'fa-solid fa-file-pen',
-                args = {
-                    cid = data.player.empSource,
-                    grade = tonumber(k),
-                    gradename = v.name
-                }
+    local menuOptions = {}
+    for i, v in pairs(QBCore.Shared.Jobs[data.work.name].grades) do
+        menuOptions[#menuOptions + 1] = {
+            title = v.name,
+            icon = 'fa-solid fa-file-pen',
+            iconColor = 'white',
+            description = Lang:t('body.grade') .. i,
+            serverEvent = 'qb-bossmenu:server:GradeUpdate',
+            args = {
+                cid = data.player.empSource,
+                grade = tonumber(i),
+                gradename = v.name
             }
         }
     end
-    EmployeeMenu[#EmployeeMenu + 1] = {
-        header = Lang:t('body.fireemp'),
+
+    menuOptions[#menuOptions + 1] = {
+        title = Lang:t('body.fireemp'),
         icon = 'fa-solid fa-user-large-slash',
-        params = {
-            isServer = true,
-            event = 'qb-bossmenu:server:FireEmployee',
-            args = data.player.empSource
-        }
+        iconColor = 'white',
+        description = 'Fire employee',
+        serverEvent = 'qb-bossmenu:server:FireEmployee',
+        args = data.player.empSource
     }
-    EmployeeMenu[#EmployeeMenu + 1] = {
-        header = Lang:t('body.return'),
-        icon = 'fa-solid fa-angle-left',
-        params = {
-            event = 'qb-bossmenu:client:OpenMenu',
-        }
-    }
-    exports['qb-menu']:openMenu(EmployeeMenu)
+
+    lib.registerContext({
+        id = 'employee_menu',
+        title = Lang:t('body.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerJob.label),
+        menu = 'boss_menu',
+        options = menuOptions
+    })
+
+    lib.showContext('employee_menu')
 end)
 
 RegisterNetEvent('qb-bossmenu:client:Wardrobe', function()
@@ -179,36 +224,29 @@ RegisterNetEvent('qb-bossmenu:client:Wardrobe', function()
 end)
 
 RegisterNetEvent('qb-bossmenu:client:HireMenu', function()
-    local HireMenu = {
-        {
-            header = Lang:t('body.hireemp') .. string.upper(PlayerJob.label),
-            isMenuHeader = true,
-            icon = 'fa-solid fa-circle-info',
-        },
-    }
-    QBCore.Functions.TriggerCallback('qb-bossmenu:getplayers', function(players)
+    lib.callback('qb-bossmenu:getplayers', false, function(players)
+        local menuOptions = {}
         for _, v in pairs(players) do
             if v and v ~= PlayerId() then
-                HireMenu[#HireMenu + 1] = {
-                    header = v.name,
-                    txt = Lang:t('body.cid') .. v.citizenid .. ' - ID: ' .. v.sourceplayer,
+                menuOptions[#menuOptions + 1] = {
+                    title = v.name,
                     icon = 'fa-solid fa-user-check',
-                    params = {
-                        isServer = true,
-                        event = 'qb-bossmenu:server:HireEmployee',
-                        args = v.sourceplayer
-                    }
+                    iconColor = 'white',
+                    description = Lang:t('body.cid') .. v.citizenid .. ' - ID: ' .. v.sourceplayer,
+                    serverEvent = 'qb-bossmenu:server:HireEmployee',
+                    args = v.sourceplayer
                 }
             end
         end
-        HireMenu[#HireMenu + 1] = {
-            header = Lang:t('body.return'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-bossmenu:client:OpenMenu',
-            }
-        }
-        exports['qb-menu']:openMenu(HireMenu)
+
+        lib.registerContext({
+            id = 'hire_menu',
+            title = Lang:t('body.hireemp') .. string.upper(PlayerJob.label),
+            menu = 'boss_menu',
+            options = menuOptions
+        })
+
+        lib.showContext('hire_menu')
     end)
 end)
 
@@ -232,7 +270,7 @@ CreateThread(function()
                             canInteract = function() return job == PlayerJob.name and PlayerJob.isboss end,
                         },
                     },
-                    distance = 2.5
+                    distance = 3.0
                 })
             end
         end

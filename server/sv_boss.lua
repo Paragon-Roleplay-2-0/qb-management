@@ -1,4 +1,10 @@
+if not lib.checkDependency('ox_lib', '3.30.0', true) then return end
+
 local QBCore = exports['qb-core']:GetCoreObject()
+
+local oxInvState = GetResourceState('ox_inventory')
+
+local ox_inventory = exports.ox_inventory
 
 function ExploitBan(id, reason)
 	MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)', {
@@ -15,12 +21,12 @@ function ExploitBan(id, reason)
 end
 
 -- Get Employees
-QBCore.Functions.CreateCallback('qb-bossmenu:server:GetEmployees', function(source, cb, jobname)
+lib.callback.register('qb-bossmenu:server:GetEmployees', function(source, jobname)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(src)
 
 	if not Player.PlayerData.job.isboss then
-		ExploitBan(src, 'GetEmployees Exploiting')
+		ExploitBan(src, 'Get Employees Exploiting')
 		return
 	end
 
@@ -46,7 +52,8 @@ QBCore.Functions.CreateCallback('qb-bossmenu:server:GetEmployees', function(sour
 			return a.grade.level > b.grade.level
 		end)
 	end
-	cb(employees)
+
+	return employees
 end)
 
 RegisterNetEvent('qb-bossmenu:server:stash', function()
@@ -64,13 +71,29 @@ RegisterNetEvent('qb-bossmenu:server:stash', function()
 		if #(playerCoords - coords) < 2.5 then
 			local stashName = 'boss_' .. playerJob.name
 			exports['qb-inventory']:OpenInventory(src, stashName, {
-				maxweight = 4000000,
+				maxweight = 400000,
 				slots = 25,
 			})
 			return
 		end
 	end
 end)
+
+if Config.Inventory == 'ox' and oxInvState == 'started' then
+	local bossStash = {
+		id = 'boss_stash',
+		label = 'Boss Stash',
+		slots = 25,
+		weight = 400000,
+		owner = true
+	}
+
+	AddEventHandler('onServerResourceStart', function(resourceName)
+		if resourceName == 'ox_inventory' or resourceName == GetCurrentResourceName() then
+			ox_inventory:RegisterStash(bossStash.id, bossStash.label, bossStash.slots, bossStash.weight, bossStash.owner)
+		end
+	end)
+end
 
 -- Grade Change
 RegisterNetEvent('qb-bossmenu:server:GradeUpdate', function(data)
@@ -79,7 +102,7 @@ RegisterNetEvent('qb-bossmenu:server:GradeUpdate', function(data)
 	local Employee = QBCore.Functions.GetPlayerByCitizenId(data.cid) or QBCore.Functions.GetOfflinePlayerByCitizenId(data.cid)
 
 	if not Player.PlayerData.job.isboss then
-		ExploitBan(src, 'GradeUpdate Exploiting')
+		ExploitBan(src, 'Grade Update Exploiting')
 		return
 	end
 	if data.grade > Player.PlayerData.job.grade.level then
@@ -109,7 +132,7 @@ RegisterNetEvent('qb-bossmenu:server:FireEmployee', function(target)
 	local Employee = QBCore.Functions.GetPlayerByCitizenId(target) or QBCore.Functions.GetOfflinePlayerByCitizenId(target)
 
 	if not Player.PlayerData.job.isboss then
-		ExploitBan(src, 'FireEmployee Exploiting')
+		ExploitBan(src, 'Fire Employee Exploiting')
 		return
 	end
 
@@ -124,13 +147,14 @@ RegisterNetEvent('qb-bossmenu:server:FireEmployee', function(target)
 		if Employee.Functions.SetJob('unemployed', '0') then
 			Employee.Functions.Save()
 			TriggerClientEvent('QBCore:Notify', src, 'Employee fired!', 'success')
+			TriggerEvent('ps-multijob:server:removeJob', target) -- PS Multi-Job Support
 			TriggerEvent('qb-log:server:CreateLog', 'bossmenu', 'Job Fire', 'red', Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname .. ' successfully fired ' .. Employee.PlayerData.charinfo.firstname .. ' ' .. Employee.PlayerData.charinfo.lastname .. ' (' .. Player.PlayerData.job.name .. ')', false)
 
 			if Employee.PlayerData.source then -- Player is online
-				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been fired! Good luck.', 'error')
+				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been fired! Good luck...', 'error')
 			end
 		else
-			TriggerClientEvent('QBCore:Notify', src, 'Error..', 'error')
+			TriggerClientEvent('QBCore:Notify', src, 'Error...', 'error')
 		end
 	end
 	TriggerClientEvent('qb-bossmenu:client:OpenMenu', src)
@@ -143,20 +167,20 @@ RegisterNetEvent('qb-bossmenu:server:HireEmployee', function(recruit)
 	local Target = QBCore.Functions.GetPlayer(recruit)
 
 	if not Player.PlayerData.job.isboss then
-		ExploitBan(src, 'HireEmployee Exploiting')
+		ExploitBan(src, 'Hire Employee Exploiting')
 		return
 	end
 
 	if Target and Target.Functions.SetJob(Player.PlayerData.job.name, 0) then
-		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' come ' .. Player.PlayerData.job.label .. '', 'success')
-		TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You were hired as ' .. Player.PlayerData.job.label .. '', 'success')
+		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.job.label .. '.', 'success')
+		TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You were hired as ' .. Player.PlayerData.job.label .. ' ', 'success')
 		TriggerEvent('qb-log:server:CreateLog', 'bossmenu', 'Recruit', 'lightgreen', (Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname) .. ' successfully recruited ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' (' .. Player.PlayerData.job.name .. ')', false)
 	end
 	TriggerClientEvent('qb-bossmenu:client:OpenMenu', src)
 end)
 
 -- Get closest player sv
-QBCore.Functions.CreateCallback('qb-bossmenu:getplayers', function(source, cb)
+lib.callback.register('qb-bossmenu:getplayers', function(source)
 	local src = source
 	local players = {}
 	local PlayerPed = GetPlayerPed(src)
@@ -177,8 +201,10 @@ QBCore.Functions.CreateCallback('qb-bossmenu:getplayers', function(source, cb)
 			}
 		end
 	end
+	
 	table.sort(players, function(a, b)
 		return a.name < b.name
 	end)
-	cb(players)
+
+	return players
 end)

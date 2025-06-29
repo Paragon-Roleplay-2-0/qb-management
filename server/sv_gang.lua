@@ -1,12 +1,18 @@
+if not lib.checkDependency('ox_lib', '3.30.0', true) then return end
+
 local QBCore = exports['qb-core']:GetCoreObject()
 
+local oxInvState = GetResourceState('ox_inventory')
+
+local ox_inventory = exports.ox_inventory
+
 -- Get Employees
-QBCore.Functions.CreateCallback('qb-gangmenu:server:GetEmployees', function(source, cb, gangname)
+lib.callback.register('qb-gangmenu:server:GetEmployees', function(source, gangname)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(src)
 
 	if not Player.PlayerData.gang.isboss then
-		ExploitBan(src, 'GetEmployees Exploiting')
+		ExploitBan(src, 'Get Employees Exploiting')
 		return
 	end
 
@@ -27,7 +33,8 @@ QBCore.Functions.CreateCallback('qb-gangmenu:server:GetEmployees', function(sour
 			end
 		end
 	end
-	cb(employees)
+
+	return employees
 end)
 
 RegisterNetEvent('qb-gangmenu:server:stash', function()
@@ -45,13 +52,29 @@ RegisterNetEvent('qb-gangmenu:server:stash', function()
 		if #(playerCoords - coords) < 2.5 then
 			local stashName = 'boss_' .. playerGang.name
 			exports['qb-inventory']:OpenInventory(src, stashName, {
-				maxweight = 4000000,
+				maxweight = 400000,
 				slots = 25,
 			})
 			return
 		end
 	end
 end)
+
+if Config.Inventory == 'ox' and oxInvState == 'started' then
+	local gangStash = {
+		id = 'gang_stash',
+		label = 'Gang Boss Stash',
+		slots = 25,
+		weight = 400000,
+		owner = true,
+	}
+
+	AddEventHandler('onServerResourceStart', function(resourceName)
+		if resourceName == 'ox_inventory' or resourceName == GetCurrentResourceName() then
+			ox_inventory:RegisterStash(gangStash.id, gangStash.label, gangStash.slots, gangStash.weight, gangStash.owner)
+		end
+	end)
+end
 
 -- Grade Change
 RegisterNetEvent('qb-gangmenu:server:GradeUpdate', function(data)
@@ -60,7 +83,7 @@ RegisterNetEvent('qb-gangmenu:server:GradeUpdate', function(data)
 	local Employee = QBCore.Functions.GetPlayerByCitizenId(data.cid) or QBCore.Functions.GetOfflinePlayerByCitizenId(data.cid)
 
 	if not Player.PlayerData.gang.isboss then
-		ExploitBan(src, 'GradeUpdate Exploiting')
+		ExploitBan(src, 'Grade Update Exploiting')
 		return
 	end
 	if data.grade > Player.PlayerData.gang.grade.level then
@@ -90,7 +113,7 @@ RegisterNetEvent('qb-gangmenu:server:FireMember', function(target)
 	local Employee = QBCore.Functions.GetPlayerByCitizenId(target) or QBCore.Functions.GetOfflinePlayerByCitizenId(target)
 
 	if not Player.PlayerData.gang.isboss then
-		ExploitBan(src, 'FireEmployee Exploiting')
+		ExploitBan(src, 'Fire Employee Exploiting')
 		return
 	end
 
@@ -124,12 +147,12 @@ RegisterNetEvent('qb-gangmenu:server:HireMember', function(recruit)
 	local Target = QBCore.Functions.GetPlayer(recruit)
 
 	if not Player.PlayerData.gang.isboss then
-		ExploitBan(src, 'HireEmployee Exploiting')
+		ExploitBan(src, 'Hire Employee Exploiting')
 		return
 	end
 
 	if Target and Target.Functions.SetGang(Player.PlayerData.gang.name, 0) then
-		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' come ' .. Player.PlayerData.gang.label .. '', 'success')
+		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.gang.label .. '.', 'success')
 		TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You have been hired as ' .. Player.PlayerData.gang.label .. '', 'success')
 		TriggerEvent('qb-log:server:CreateLog', 'gangmenu', 'Recruit', 'yellow', (Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname) .. ' successfully recruited ' .. Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname .. ' (' .. Player.PlayerData.gang.name .. ')', false)
 	end
@@ -137,7 +160,7 @@ RegisterNetEvent('qb-gangmenu:server:HireMember', function(recruit)
 end)
 
 -- Get closest player sv
-QBCore.Functions.CreateCallback('qb-gangmenu:getplayers', function(source, cb)
+lib.callback.register('qb-gangmenu:getplayers', function(source)
 	local src = source
 	local players = {}
 	local PlayerPed = GetPlayerPed(src)
@@ -158,8 +181,10 @@ QBCore.Functions.CreateCallback('qb-gangmenu:getplayers', function(source, cb)
 			}
 		end
 	end
+
 	table.sort(players, function(a, b)
 		return a.name < b.name
 	end)
-	cb(players)
+
+	return players
 end)

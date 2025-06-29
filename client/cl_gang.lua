@@ -1,3 +1,5 @@
+if not lib.checkDependency('ox_lib', '3.30.0', true) then return end
+
 local QBCore = exports['qb-core']:GetCoreObject()
 local PlayerGang = QBCore.Functions.GetPlayerData().gang
 local shownGangMenu = false
@@ -9,26 +11,6 @@ local function CloseMenuFullGang()
     exports['qb-core']:HideText()
     shownGangMenu = false
 end
-
---//Events
-AddEventHandler('onResourceStart', function(resource) --if you restart the resource
-    if resource == GetCurrentResourceName() then
-        Wait(200)
-        PlayerGang = QBCore.Functions.GetPlayerData().gang
-    end
-end)
-
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    PlayerGang = QBCore.Functions.GetPlayerData().gang
-end)
-
-RegisterNetEvent('QBCore:Client:OnGangUpdate', function(InfoGang)
-    PlayerGang = InfoGang
-end)
-
-RegisterNetEvent('qb-gangmenu:client:Warbobe', function()
-    TriggerEvent('qb-clothing:client:openOutfitMenu')
-end)
 
 local function AddGangMenuItem(data, id)
     local menuID = id or (#DynamicMenuItems + 1)
@@ -44,177 +26,232 @@ end
 
 exports('RemoveGangMenuItem', RemoveGangMenuItem)
 
-RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
-    shownGangMenu = true
-    local gangMenu = {
-        {
-            header = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
-            icon = 'fa-solid fa-circle-info',
-            isMenuHeader = true,
-        },
-        {
-            header = Lang:t('bodygang.manage'),
-            txt = Lang:t('bodygang.managed'),
-            icon = 'fa-solid fa-list',
-            params = {
-                event = 'qb-gangmenu:client:ManageGang',
-            }
-        },
-        {
-            header = Lang:t('bodygang.hire'),
-            txt = Lang:t('bodygang.hired'),
-            icon = 'fa-solid fa-hand-holding',
-            params = {
-                event = 'qb-gangmenu:client:HireMembers',
-            }
-        },
-        {
-            header = Lang:t('bodygang.storage'),
-            txt = Lang:t('bodygang.storaged'),
-            icon = 'fa-solid fa-box-open',
-            params = {
-                isServer = true,
-                event = 'qb-gangmenu:server:stash',
-            }
-        },
-        {
-            header = Lang:t('bodygang.outfits'),
-            txt = Lang:t('bodygang.outfitsd'),
-            icon = 'fa-solid fa-shirt',
-            params = {
-                event = 'qb-gangmenu:client:Warbobe',
-            }
-        }
-    }
-
-    for _, v in pairs(DynamicMenuItems) do
-        gangMenu[#gangMenu + 1] = v
+local function openGangStash()
+    if Config.Inventory == 'ox' then
+        local ox_inventory = exports.ox_inventory
+        ox_inventory:openInventory('stash', 'gang_stash')
     end
+end
 
-    gangMenu[#gangMenu + 1] = {
-        header = Lang:t('bodygang.exit'),
-        icon = 'fa-solid fa-angle-left',
-        params = {
-            event = 'qb-menu:closeMenu',
+-- Events
+AddEventHandler('onResourceStart', function(resource) --if you restart the resource
+    if resource == GetCurrentResourceName() then
+        Wait(200)
+        PlayerGang = QBCore.Functions.GetPlayerData().gang
+    end
+end)
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    PlayerGang = QBCore.Functions.GetPlayerData().gang
+end)
+
+RegisterNetEvent('QBCore:Client:OnGangUpdate', function(InfoGang)
+    PlayerGang = InfoGang
+end)
+
+RegisterNetEvent('qb-gangmenu:client:stash', function()
+    openGangStash()
+end)
+
+RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
+    if not PlayerGang.name or not PlayerGang.isboss then return end
+    if Config.Inventory == 'qb' then
+        local menuOptions = {
+            {
+                title = Lang:t('bodygang.manage'),
+                icon = 'fa-solid fa-list',
+                iconColor = 'white',
+                description = Lang:t('bodygang.managed'),
+                arrow = true,
+                event = 'qb-gangmenu:client:ManageGang'
+            },
+            {
+                title = Lang:t('bodygang.hire'),
+                icon = 'fa-solid fa-hand-holding',
+                iconColor = 'white',
+                description = Lang:t('bodygang.hired'),
+                arrow = true,
+                event = 'qb-gangmenu:client:HireMembers',
+            },
+            {
+                title = Lang:t('bodygang.storage'),
+                icon = 'fa-solid fa-box-open',
+                iconColor = 'white',
+                description = Lang:t('bodygang.storaged'),
+                arrow = true,
+                serverEvent = 'qb-gangmenu:server:stash',
+            },
+            {
+                title = Lang:t('bodygang.outfits'),
+                icon = 'fa-solid fa-shirt',
+                iconColor = 'white',
+                description = Lang:t('bodygang.outfitsd'),
+                arrow = true,
+                event = 'qb-gangmenu:client:Wardrobe',
+            }
         }
-    }
 
-    exports['qb-menu']:openMenu(gangMenu)
+        for _, v in pairs(DynamicMenuItems) do
+            menuOptions[#menuOptions + 1] = v
+        end
+
+        lib.registerContext({
+            id = 'gang_menu',
+            title = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
+            canClose = true,
+            options = menuOptions
+        })
+
+        lib.showContext('gang_menu')
+    elseif Config.Inventory == 'ox' then
+        local menuOptions = {
+            {
+                title = Lang:t('bodygang.manage'),
+                icon = 'fa-solid fa-list',
+                iconColor = 'white',
+                description = Lang:t('bodygang.managed'),
+                arrow = true,
+                event = 'qb-gangmenu:client:ManageGang'
+            },
+            {
+                title = Lang:t('bodygang.hire'),
+                icon = 'fa-solid fa-hand-holding',
+                iconColor = 'white',
+                description = Lang:t('bodygang.hired'),
+                arrow = true,
+                event = 'qb-gangmenu:client:HireMembers',
+            },
+            {
+                title = Lang:t('bodygang.storage'),
+                icon = 'fa-solid fa-box-open',
+                iconColor = 'white',
+                description = Lang:t('bodygang.storaged'),
+                arrow = true,
+                event = 'qb-gangmenu:client:stash',
+            },
+            {
+                title = Lang:t('bodygang.outfits'),
+                icon = 'fa-solid fa-shirt',
+                iconColor = 'white',
+                description = Lang:t('bodygang.outfitsd'),
+                arrow = true,
+                event = 'qb-gangmenu:client:Wardrobe',
+            }
+        }
+
+        for _, v in pairs(DynamicMenuItems) do
+            menuOptions[#menuOptions + 1] = v
+        end
+
+        lib.registerContext({
+            id = 'gang_menu',
+            title = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
+            canClose = true,
+            options = menuOptions
+        })
+
+        lib.showContext('gang_menu')
+    end
 end)
 
 RegisterNetEvent('qb-gangmenu:client:ManageGang', function()
-    local GangMembersMenu = {
-        {
-            header = Lang:t('bodygang.mempl') .. string.upper(PlayerGang.label),
-            icon = 'fa-solid fa-circle-info',
-            isMenuHeader = true,
-        },
-    }
-    QBCore.Functions.TriggerCallback('qb-gangmenu:server:GetEmployees', function(cb)
-        for _, v in pairs(cb) do
-            GangMembersMenu[#GangMembersMenu + 1] = {
-                header = v.name,
-                txt = v.grade.name,
+    lib.callback('qb-gangmenu:server:GetEmployees', false, function(employees)
+        local menuOptions = {}
+
+        for _, v in pairs(employees) do
+            menuOptions[#menuOptions + 1] = {
+                title = v.name,
                 icon = 'fa-solid fa-circle-user',
-                params = {
-                    event = 'qb-gangmenu:lient:ManageMember',
-                    args = {
-                        player = v,
-                        work = PlayerGang
-                    }
+                iconColor = 'white',
+                description = v.grade.name,
+                event = 'qb-gangmenu:client:ManageMember',
+                args = {
+                    player = v,
+                    work = PlayerGang
                 }
             }
         end
-        GangMembersMenu[#GangMembersMenu + 1] = {
-            header = Lang:t('bodygang.return'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-gangmenu:client:OpenMenu',
-            }
-        }
-        exports['qb-menu']:openMenu(GangMembersMenu)
+
+        lib.registerContext({
+            id = 'manage_menu',
+            title = Lang:t('bodygang.mempl') .. string.upper(PlayerGang.label),
+            menu = 'gang_menu',
+            options = menuOptions
+        })
+
+        lib.showContext('manage_menu')
     end, PlayerGang.name)
 end)
 
-RegisterNetEvent('qb-gangmenu:lient:ManageMember', function(data)
-    local MemberMenu = {
-        {
-            header = Lang:t('bodygang.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerGang.label),
-            isMenuHeader = true,
-            icon = 'fa-solid fa-circle-info',
-        },
-    }
-    for k, v in pairs(QBCore.Shared.Gangs[data.work.name].grades) do
-        MemberMenu[#MemberMenu + 1] = {
-            header = v.name,
-            txt = Lang:t('bodygang.grade') .. k,
-            params = {
-                isServer = true,
-                event = 'qb-gangmenu:server:GradeUpdate',
-                icon = 'fa-solid fa-file-pen',
-                args = {
-                    cid = data.player.empSource,
-                    grade = tonumber(k),
-                    gradename = v.name
-                }
+RegisterNetEvent('qb-gangmenu:client:ManageMember', function(data)
+    local menuOptions = {}
+    for i, v in pairs(QBCore.Shared.Gangs[data.work.name].grades) do
+        menuOptions[#menuOptions + 1] = {
+            title = v.name,
+            icon = 'fa-solid fa-file-pen',
+            iconColor = 'white',
+            description = Lang:t('body.grade') .. i,
+            serverEvent = 'qb-gangmenu:server:GradeUpdate',
+            args = {
+                cid = data.player.empSource,
+                grade = tonumber(i),
+                gradename = v.name
             }
         }
     end
-    MemberMenu[#MemberMenu + 1] = {
-        header = Lang:t('bodygang.fireemp'),
+
+    menuOptions[#menuOptions + 1] = {
+        title = Lang:t('bodygang.fireemp'),
         icon = 'fa-solid fa-user-large-slash',
-        params = {
-            isServer = true,
-            event = 'qb-gangmenu:server:FireMember',
-            args = data.player.empSource
-        }
+        iconColor = 'white',
+        description = 'Fire gang member',
+        serverEvent = 'qb-gangmenu:server:FireMember',
+        args = data.player.empSource
     }
-    MemberMenu[#MemberMenu + 1] = {
-        header = Lang:t('bodygang.return'),
-        icon = 'fa-solid fa-angle-left',
-        params = {
-            event = 'qb-gangmenu:client:ManageGang',
-        }
-    }
-    exports['qb-menu']:openMenu(MemberMenu)
+
+    lib.registerContext({
+        id = 'member_menu',
+        title = Lang:t('bodygang.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerGang.label),
+        menu = 'gang_menu',
+        options = menuOptions
+    })
+
+    lib.showContext('member_menu')
+end)
+
+RegisterNetEvent('qb-gangmenu:client:Wardrobe', function()
+    TriggerEvent('qb-clothing:client:openOutfitMenu')
 end)
 
 RegisterNetEvent('qb-gangmenu:client:HireMembers', function()
-    local HireMembersMenu = {
-        {
-            header = Lang:t('bodygang.hireemp') .. string.upper(PlayerGang.label),
-            isMenuHeader = true,
-            icon = 'fa-solid fa-circle-info',
-        },
-    }
-    QBCore.Functions.TriggerCallback('qb-gangmenu:getplayers', function(players)
+    lib.callback('qb-gangmenu:getplayers', false, function(players)
+        local menuOptions = {}
+
         for _, v in pairs(players) do
             if v and v ~= PlayerId() then
-                HireMembersMenu[#HireMembersMenu + 1] = {
-                    header = v.name,
-                    txt = Lang:t('bodygang.cid') .. v.citizenid .. ' - ID: ' .. v.sourceplayer,
+                menuOptions[#menuOptions + 1] = {
+                    title = v.name,
                     icon = 'fa-solid fa-user-check',
-                    params = {
-                        isServer = true,
-                        event = 'qb-gangmenu:server:HireMember',
-                        args = v.sourceplayer
-                    }
+                    iconColor = 'white',
+                    description = Lang:t('bodygang.cid') .. v.citizenid .. ' - ID: ' .. v.sourceplayer,
+                    serverEvent = 'qb-gangmenu:server:HireMember',
+                    args = v.sourceplayer
                 }
             end
         end
-        HireMembersMenu[#HireMembersMenu + 1] = {
-            header = Lang:t('bodygang.return'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-gangmenu:client:OpenMenu',
-            }
-        }
-        exports['qb-menu']:openMenu(HireMembersMenu)
+
+        lib.registerContext({
+            id = 'hire_menu',
+            title = Lang:t('bodygang.hireemp') .. string.upper(PlayerGang.label),
+            menu = 'gang_menu',
+            options = menuOptions
+        })
+
+        lib.showContext('hire_menu')
     end)
 end)
 
 -- MAIN THREAD
-
 CreateThread(function()
     if Config.UseTarget then
         for gang, zones in pairs(Config.GangMenus) do
@@ -234,7 +271,7 @@ CreateThread(function()
                             canInteract = function() return gang == PlayerGang.name and PlayerGang.isboss end,
                         },
                     },
-                    distance = 2.5
+                    distance = 3.0
                 })
             end
         end

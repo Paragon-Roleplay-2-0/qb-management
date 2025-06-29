@@ -1,3 +1,5 @@
+---@diagnostic disable: lowercase-global
+
 function deepcopy(orig, copies)
     copies = copies or {}
     local orig_type = type(orig)
