@@ -87,20 +87,56 @@ RegisterNetEvent('qb-gangmenu:server:GradeUpdate', function(data)
 		return
 	end
 	if data.grade > Player.PlayerData.gang.grade.level then
-		TriggerClientEvent('QBCore:Notify', src, 'You cannot promote to this rank!', 'error')
+		if Config.Notify == 'qb' then
+			TriggerClientEvent('QBCore:Notify', src, 'You cannot promote to this rank!', 'error')
+		elseif Config.Notify == 'ox' then
+			TriggerClientEvent('ox_lib:notify', src, {
+				title = 'Promotion Error',
+				description = 'You cannot promote to this rank!',
+				position = 'center-right',
+				type = 'error'
+			})
+		end
 		return
 	end
 
 	if Employee then
 		if Employee.Functions.SetGang(Player.PlayerData.gang.name, data.grade) then
-			TriggerClientEvent('QBCore:Notify', src, 'Successfully promoted!', 'success')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Sucessfully promoted!', 'success')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Promotion Successful',
+					description = 'Successfully promoted!',
+					position = 'center-right',
+					type = 'success'
+				})
+			end
 			Employee.Functions.Save()
 
 			if Employee.PlayerData.source then
-				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been promoted to ' .. data.gradename .. '.', 'success')
+				if Config.Notify == 'qb' then
+					TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been promoted to ' .. data.gradename .. '.', 'success')
+				elseif Config.Notify == 'ox' then
+					TriggerClientEvent('ox_lib:notify', Employee.PlayerData.source, {
+						title = 'Promoted!',
+						description = 'You have been promoted to ' .. data.gradename .. '.',
+						position = 'center-right',
+						type = 'success'
+					})
+				end
 			end
 		else
-			TriggerClientEvent('QBCore:Notify', src, 'Grade does not exist.', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Promotion grade does not exist.', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Promotion Error',
+					description = 'Promotion grade does not exist.',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 		end
 	end
 	TriggerClientEvent('qb-gangmenu:client:OpenMenu', src)
@@ -119,22 +155,66 @@ RegisterNetEvent('qb-gangmenu:server:FireMember', function(target)
 
 	if Employee then
 		if target == Player.PlayerData.citizenid then
-			TriggerClientEvent('QBCore:Notify', src, 'You can\'t kick yourself out of the gang!', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'You can\'t kick yourself out of the gang!', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Removal Error',
+					description = 'You can\'t kick yourself out of the gang!',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 			return
 		elseif Employee.PlayerData.gang.grade.level > Player.PlayerData.gang.grade.level then
-			TriggerClientEvent('QBCore:Notify', src, 'You cannot fire this citizen!', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'You cannot fire this citizen!', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Termination Error',
+					description = 'You cannot fire this citizen!',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 			return
 		end
 		if Employee.Functions.SetGang('none', '0') then
 			Employee.Functions.Save()
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Gang Member fired!', 'success')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Termination Successful',
+					description = 'Gang Member fired!',
+					position = 'center-right',
+					type = 'success'
+				})
+			end
 			TriggerEvent('qb-log:server:CreateLog', 'gangmenu', 'Gang Fire', 'orange', Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname .. ' successfully fired ' .. Employee.PlayerData.charinfo.firstname .. ' ' .. Employee.PlayerData.charinfo.lastname .. ' (' .. Player.PlayerData.gang.name .. ')', false)
-			TriggerClientEvent('QBCore:Notify', src, 'Gang Member fired!', 'success')
-
 			if Employee.PlayerData.source then -- Player is online
-				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been expelled from the gang!', 'error')
+				if Config.Notify == 'qb' then
+					TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been expelled from the gang! Good luck...', 'error')
+				elseif Config.Notify == 'ox' then
+					TriggerClientEvent('ox_lib:notify', Employee.PlayerData.source, {
+						title = 'You\'re Fired!',
+						description = 'You have been expelled from the gang! Good luck...',
+						position = 'center-right',
+						type = 'error'
+					})
+				end
 			end
 		else
-			TriggerClientEvent('QBCore:Notify', src, 'Error.', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Error...', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Unknown Error',
+					description = 'Error...',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 		end
 	end
 	TriggerClientEvent('qb-gangmenu:client:OpenMenu', src)
@@ -152,8 +232,23 @@ RegisterNetEvent('qb-gangmenu:server:HireMember', function(recruit)
 	end
 
 	if Target and Target.Functions.SetGang(Player.PlayerData.gang.name, 0) then
-		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.gang.label .. '.', 'success')
-		TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You have been hired as ' .. Player.PlayerData.gang.label .. '', 'success')
+		if Config.Notify == 'qb' then
+			TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.gang.label .. '.', 'success')
+			TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You have been hired as ' .. Player.PlayerData.gang.label .. '.', 'success')
+		elseif Config.Notify == 'ox' then
+			TriggerClientEvent('ox_lib:notify', src, {
+				title = 'Recruitment Successful',
+				description = 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.gang.label .. '.',
+				position = 'center-right',
+				type = 'success'
+			})
+			TriggerClientEvent('ox_lib:notify', Target.PlayerData.source, {
+				title = 'You\'re Hired!',
+				description = 'You have been hired as ' .. Player.PlayerData.gang.label .. '.',
+				position = 'center-right',
+				type = 'success'
+			})
+		end
 		TriggerEvent('qb-log:server:CreateLog', 'gangmenu', 'Recruit', 'yellow', (Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname) .. ' successfully recruited ' .. Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname .. ' (' .. Player.PlayerData.gang.name .. ')', false)
 	end
 	TriggerClientEvent('qb-gangmenu:client:OpenMenu', src)

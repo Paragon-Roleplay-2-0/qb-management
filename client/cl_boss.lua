@@ -7,8 +7,8 @@ local DynamicMenuItems = {}
 
 -- UTIL
 local function CloseMenuFull()
-    exports['qb-menu']:closeMenu()
-    exports['qb-core']:HideText()
+    lib.hideContext()
+    lib.hideTextUI()
     shownBossMenu = false
 end
 
@@ -28,8 +28,10 @@ exports('RemoveBossMenuItem', RemoveBossMenuItem)
 
 local function openBossStash()
     if Config.Inventory == 'ox' then
-        local ox_inventory = exports.ox_inventory
-        ox_inventory:openInventory('stash', 'boss_stash')
+        if GetResourceState('ox_inventory') == 'started' and GetCurrentResourceName() then
+            local ox_inventory = exports.ox_inventory
+            ox_inventory:openInventory('stash', 'boss_stash')
+        end
     end
 end
 
@@ -54,6 +56,8 @@ end)
 
 RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
     if not PlayerJob.name or not PlayerJob.isboss then return end
+
+    shownBossMenu = true
 
     if Config.Inventory == 'qb' then
         local menuOptions = {
@@ -99,6 +103,7 @@ RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
             id = 'boss_menu',
             title = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
             canClose = true,
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -147,6 +152,7 @@ RegisterNetEvent('qb-bossmenu:client:OpenMenu', function()
             id = 'boss_menu',
             title = Lang:t('headers.bsm') .. string.upper(PlayerJob.label),
             canClose = true,
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -290,11 +296,11 @@ CreateThread(function()
                                 if #(pos - coords) <= 1.5 then
                                     nearBossmenu = true
                                     if not shownBossMenu then
-                                        exports['qb-core']:DrawText(Lang:t('drawtext.label'), 'left')
+                                        lib.showTextUI(Lang:t('drawtext.label'), { position = 'left-center' })
                                         shownBossMenu = true
                                     end
                                     if IsControlJustReleased(0, 38) then
-                                        exports['qb-core']:HideText()
+                                        lib.hideTextUI()
                                         TriggerEvent('qb-bossmenu:client:OpenMenu')
                                     end
                                 end

@@ -7,8 +7,8 @@ local DynamicMenuItems = {}
 
 -- UTIL
 local function CloseMenuFullGang()
-    exports['qb-menu']:closeMenu()
-    exports['qb-core']:HideText()
+    lib.hideContext()
+    lib.hideTextUI()
     shownGangMenu = false
 end
 
@@ -28,8 +28,10 @@ exports('RemoveGangMenuItem', RemoveGangMenuItem)
 
 local function openGangStash()
     if Config.Inventory == 'ox' then
-        local ox_inventory = exports.ox_inventory
-        ox_inventory:openInventory('stash', 'gang_stash')
+        if GetResourceState('ox_inventory') == 'started' and GetCurrentResourceName() then
+            local ox_inventory = exports.ox_inventory
+            ox_inventory:openInventory('stash', 'gang_stash')
+        end
     end
 end
 
@@ -55,6 +57,9 @@ end)
 
 RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
     if not PlayerGang.name or not PlayerGang.isboss then return end
+
+    shownGangMenu = true
+
     if Config.Inventory == 'qb' then
         local menuOptions = {
             {
@@ -99,6 +104,7 @@ RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
             id = 'gang_menu',
             title = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
             canClose = true,
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -147,6 +153,7 @@ RegisterNetEvent('qb-gangmenu:client:OpenMenu', function()
             id = 'gang_menu',
             title = Lang:t('headersgang.bsm') .. string.upper(PlayerGang.label),
             canClose = true,
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -291,12 +298,12 @@ CreateThread(function()
                                 if #(pos - coords) <= 1.5 then
                                     nearGangmenu = true
                                     if not shownGangMenu then
-                                        exports['qb-core']:DrawText(Lang:t('drawtextgang.label'), 'left')
+                                        lib.showTextUI(Lang:t('drawtextgang.label'), { position = 'left-center' })
                                         shownGangMenu = true
                                     end
 
                                     if IsControlJustReleased(0, 38) then
-                                        exports['qb-core']:HideText()
+                                        lib.hideTextUI()
                                         TriggerEvent('qb-gangmenu:client:OpenMenu')
                                     end
                                 end

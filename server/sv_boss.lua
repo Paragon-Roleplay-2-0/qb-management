@@ -106,20 +106,56 @@ RegisterNetEvent('qb-bossmenu:server:GradeUpdate', function(data)
 		return
 	end
 	if data.grade > Player.PlayerData.job.grade.level then
-		TriggerClientEvent('QBCore:Notify', src, 'You cannot promote to this rank!', 'error')
+		if Config.Notify == 'qb' then
+			TriggerClientEvent('QBCore:Notify', src, 'You cannot promote to this rank!', 'error')
+		elseif Config.Notify == 'ox' then
+			TriggerClientEvent('ox_lib:notify', src, {
+				title = 'Promotion Error',
+				description = 'You cannot promote to this rank!',
+				position = 'center-right',
+				type = 'error'
+			})
+		end
 		return
 	end
 
 	if Employee then
 		if Employee.Functions.SetJob(Player.PlayerData.job.name, data.grade) then
-			TriggerClientEvent('QBCore:Notify', src, 'Sucessfully promoted!', 'success')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Sucessfully promoted!', 'success')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Promotion Successful',
+					description = 'Successfully promoted!',
+					position = 'center-right',
+					type = 'success'
+				})
+			end
 			Employee.Functions.Save()
 
 			if Employee.PlayerData.source then -- Player is online
-				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been promoted to ' .. data.gradename .. '.', 'success')
+				if Config.Notify == 'qb' then
+					TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been promoted to ' .. data.gradename .. '.', 'success')
+				elseif Config.Notify == 'ox' then
+					TriggerClientEvent('ox_lib:notify', Employee.PlayerData.source, {
+						title = 'Promoted!',
+						description = 'You have been promoted to ' .. data.gradename .. '.',
+						position = 'center-right',
+						type = 'success'
+					})
+				end
 			end
 		else
-			TriggerClientEvent('QBCore:Notify', src, 'Promotion grade does not exist.', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Promotion grade does not exist.', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Promotion Error',
+					description = 'Promotion grade does not exist.',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 		end
 	end
 	TriggerClientEvent('qb-bossmenu:client:OpenMenu', src)
@@ -138,23 +174,68 @@ RegisterNetEvent('qb-bossmenu:server:FireEmployee', function(target)
 
 	if Employee then
 		if target == Player.PlayerData.citizenid then
-			TriggerClientEvent('QBCore:Notify', src, 'You can\'t fire yourself', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'You can\'t fire yourself', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Termination Error',
+					description = 'You can\'t fire yourself!',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 			return
 		elseif Employee.PlayerData.job.grade.level > Player.PlayerData.job.grade.level then
-			TriggerClientEvent('QBCore:Notify', src, 'You cannot fire this citizen!', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'You cannot fire this citizen!', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Termination Error',
+					description = 'You cannot fire this citizen!',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 			return
 		end
 		if Employee.Functions.SetJob('unemployed', '0') then
 			Employee.Functions.Save()
-			TriggerClientEvent('QBCore:Notify', src, 'Employee fired!', 'success')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Employee fired!', 'success')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Termination Successful',
+					description = 'Employee fired!',
+					position = 'center-right',
+					type = 'success'
+				})
+			end
 			TriggerEvent('ps-multijob:server:removeJob', target) -- PS Multi-Job Support
 			TriggerEvent('qb-log:server:CreateLog', 'bossmenu', 'Job Fire', 'red', Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname .. ' successfully fired ' .. Employee.PlayerData.charinfo.firstname .. ' ' .. Employee.PlayerData.charinfo.lastname .. ' (' .. Player.PlayerData.job.name .. ')', false)
 
 			if Employee.PlayerData.source then -- Player is online
-				TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been fired! Good luck...', 'error')
+				if Config.Notify == 'qb' then
+					TriggerClientEvent('QBCore:Notify', Employee.PlayerData.source, 'You have been fired! Good luck...', 'error')
+				elseif Config.Notify == 'ox' then
+					TriggerClientEvent('ox_lib:notify', Employee.PlayerData.source, {
+						title = 'You\'re Fired!',
+						description = 'You have been terminated! Good luck...',
+						position = 'center-right',
+						type = 'error'
+					})
+				end
 			end
 		else
-			TriggerClientEvent('QBCore:Notify', src, 'Error...', 'error')
+			if Config.Notify == 'qb' then
+				TriggerClientEvent('QBCore:Notify', src, 'Error...', 'error')
+			elseif Config.Notify == 'ox' then
+				TriggerClientEvent('ox_lib:notify', src, {
+					title = 'Unknown Error',
+					description = 'Error...',
+					position = 'center-right',
+					type = 'error'
+				})
+			end
 		end
 	end
 	TriggerClientEvent('qb-bossmenu:client:OpenMenu', src)
@@ -172,8 +253,23 @@ RegisterNetEvent('qb-bossmenu:server:HireEmployee', function(recruit)
 	end
 
 	if Target and Target.Functions.SetJob(Player.PlayerData.job.name, 0) then
-		TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.job.label .. '.', 'success')
-		TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You were hired as ' .. Player.PlayerData.job.label .. ' ', 'success')
+		if Config.Notify == 'qb' then
+			TriggerClientEvent('QBCore:Notify', src, 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.job.label .. '.', 'success')
+			TriggerClientEvent('QBCore:Notify', Target.PlayerData.source, 'You were hired for ' .. Player.PlayerData.job.label .. '.', 'success')
+		elseif Config.Notify == 'ox' then
+			TriggerClientEvent('ox_lib:notify', src, {
+				title = 'Recruitment Successful',
+				description = 'You hired ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' for ' .. Player.PlayerData.job.label .. '.',
+				position = 'center-right',
+				type = 'success'
+			})
+			TriggerClientEvent('ox_lib:notify', Target.PlayerData.source, {
+				title = 'You\'re Hired!',
+				description = 'You were hired for ' .. Player.PlayerData.job.label .. '.',
+				position = 'center-right',
+				type = 'success'
+			})
+		end
 		TriggerEvent('qb-log:server:CreateLog', 'bossmenu', 'Recruit', 'lightgreen', (Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname) .. ' successfully recruited ' .. (Target.PlayerData.charinfo.firstname .. ' ' .. Target.PlayerData.charinfo.lastname) .. ' (' .. Player.PlayerData.job.name .. ')', false)
 	end
 	TriggerClientEvent('qb-bossmenu:client:OpenMenu', src)
@@ -201,7 +297,7 @@ lib.callback.register('qb-bossmenu:getplayers', function(source)
 			}
 		end
 	end
-	
+
 	table.sort(players, function(a, b)
 		return a.name < b.name
 	end)
