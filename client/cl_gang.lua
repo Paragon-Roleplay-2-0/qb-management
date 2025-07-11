@@ -183,6 +183,7 @@ RegisterNetEvent('qb-gangmenu:client:ManageGang', function()
             id = 'manage_menu',
             title = Lang:t('bodygang.mempl') .. string.upper(PlayerGang.label),
             menu = 'gang_menu',
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -220,6 +221,7 @@ RegisterNetEvent('qb-gangmenu:client:ManageMember', function(data)
         id = 'member_menu',
         title = Lang:t('bodygang.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerGang.label),
         menu = 'gang_menu',
+        position = 'offcenter-right', -- Lation UI
         options = menuOptions
     })
 
@@ -251,6 +253,7 @@ RegisterNetEvent('qb-gangmenu:client:HireMembers', function()
             id = 'hire_menu',
             title = Lang:t('bodygang.hireemp') .. string.upper(PlayerGang.label),
             menu = 'gang_menu',
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 

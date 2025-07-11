@@ -182,6 +182,7 @@ RegisterNetEvent('qb-bossmenu:client:employeelist', function()
             id = 'manage_menu',
             title = Lang:t('body.mempl') .. string.upper(PlayerJob.label),
             menu = 'boss_menu',
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
@@ -219,6 +220,7 @@ RegisterNetEvent('qb-bossmenu:client:ManageEmployee', function(data)
         id = 'employee_menu',
         title = Lang:t('body.mngpl') .. data.player.name .. ' - ' .. string.upper(PlayerJob.label),
         menu = 'boss_menu',
+        position = 'offcenter-right', -- Lation UI
         options = menuOptions
     })
 
@@ -249,6 +251,7 @@ RegisterNetEvent('qb-bossmenu:client:HireMenu', function()
             id = 'hire_menu',
             title = Lang:t('body.hireemp') .. string.upper(PlayerJob.label),
             menu = 'boss_menu',
+            position = 'offcenter-right', -- Lation UI
             options = menuOptions
         })
 
